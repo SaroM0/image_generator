@@ -31,6 +31,8 @@ Este proyecto es una aplicación interactiva diseñada para generar y editar im�
 
 ## Flujo de Decisiones
 
+![Descripción del diagrama](assets/diagrama.png)
+
 ### 1. Entrada del Usuario
 - El usuario describe lo que desea realizar: generar, editar o hacer preguntas.
 - Si el texto incluye una URL válida, esta se detecta y almacena en el contexto como la última imagen proporcionada.
