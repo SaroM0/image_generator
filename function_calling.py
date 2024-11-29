@@ -32,8 +32,7 @@ generate_image_function = {
         "properties": {
             "prompt": {
                 "type": "string",
-                "description": "El prompt que describe la imagen a generar.",
-                "required": True
+                "description": "El prompt que describe la imagen a generar."
             },
             "aspect_ratio": {
                 "type": "string",
@@ -145,9 +144,10 @@ generate_image_function = {
                 ]
             }
         },
-        "required": ["prompt", "model", "style_type", "resolution", "color_palette"]
+        "required": ["prompt", "model", "style_type"]
     }
 }
+
 
 edit_image_function = {
     "name": "edit_image",
@@ -158,18 +158,15 @@ edit_image_function = {
             "prompt": {
                 "type": "string",
                 "description": "Descripción de los cambios en la imagen. Este es el prompt utilizado para describir el resultado editado.",
-                "required": True
             },
             "image_url": {
                 "type": "string",
                 "description": "URL de la imagen que se va a editar.",
-                "required": True
             },
             "model": {
                 "type": "string",
                 "description": "El modelo utilizado para la edición. Solo compatible con V_2 y V_2_TURBO.",
                 "enum": ["V_2", "V_2_TURBO"],
-                "required": True
             },
             "magic_prompt_option": {
                 "type": "string",
@@ -189,7 +186,7 @@ edit_image_function = {
                 "enum": ["AUTO", "GENERAL", "REALISTIC", "DESIGN", "RENDER_3D", "ANIME"]
             }
         },
-        "required": ["prompt", "image_url", "model"]
+        "required": ["prompt", "image_url", "model"] 
     }
 }
 

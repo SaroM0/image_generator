@@ -1,17 +1,12 @@
 import requests
 import os
+import json
 
 def remix_image(arguments, context):
     """
     Realiza un remix de una imagen usando la API de Ideogram.
-
-    Args:
-        arguments (dict): Diccionario con los parámetros necesarios para el remix.
-        context (dict): Contexto compartido para almacenar la URL de la imagen generada.
-
-    Returns:
-        dict: Respuesta de la API en formato JSON.
     """
+    # Obtener la clave de API
     api_key = os.getenv("IDEOGRAM_API_KEY")
     if not api_key:
         raise Exception("La clave de API 'IDEOGRAM_API_KEY' no está configurada.")
@@ -31,14 +26,11 @@ def remix_image(arguments, context):
     if response_image.status_code != 200:
         raise Exception(f"Error al descargar la imagen: {response_image.status_code} - {response_image.text}")
 
-    # Construir el payload con los campos obligatorios
-    payload = {
-        "image_request": {
-            "prompt": arguments["prompt"],  # Campo obligatorio
-        }
+    # Construir el campo 'image_request'
+    image_request = {
+        "prompt": arguments["prompt"],  # Campo requerido
     }
 
-    # Añadir campos opcionales si están presentes
     optional_fields = [
         "aspect_ratio",
         "image_weight",
@@ -53,12 +45,18 @@ def remix_image(arguments, context):
 
     for field in optional_fields:
         if field in arguments and arguments[field] is not None:
-            payload["image_request"][field] = arguments[field]
+            image_request[field] = arguments[field]
+
+    # Construir el payload
+    payload = {
+        "image_request": json.dumps(image_request)  # Convertir a JSON
+    }
 
     # Enviar la imagen y el payload a la API
     print("Enviando la imagen a la API para realizar el remix...")
     files = {"image_file": ("image.jpg", response_image.content, "image/jpeg")}
-    response = requests.post(url, files=files, json=payload, headers=headers)
+
+    response = requests.post(url, data=payload, files=files, headers=headers)
 
     if response.status_code != 200:
         raise Exception(f"Error en la API: {response.status_code} - {response.text}")
