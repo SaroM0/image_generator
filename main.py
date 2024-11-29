@@ -11,6 +11,7 @@ from functions import contains_url, handle_image_action
 
 # Function Calling Imports
 from function_calling import (
+    confirm_parameters_function,
     generate_image_function,
     edit_image_function,
     describe_image_function,
@@ -43,6 +44,7 @@ def display_history(history):
 
 def iterative_decision_loop(context, iterative=False):
     function_calling_functions = [
+        confirm_parameters_function,
         generate_image_function,
         edit_image_function,
         describe_image_function,
