@@ -1,141 +1,156 @@
-import openai
-from openai_client import initialize_openai
-from functions import  detect_provided_image, decide_action, confirm_parameters, generate_image, edit_image
-from function_calling import decision_function, generate_image_function, edit_image_function
+# General Imports
 from dotenv import load_dotenv
+import openai
 import json
 
+# OpenAI Client Import
+from openai_client import initialize_openai
+
+# Common Functions Imports
+from functions import contains_url, handle_image_action
+
+# Function Calling Imports
+from function_calling import (
+    generate_image_function,
+    edit_image_function,
+    describe_image_function,
+    remix_image_function,
+    upscale_image_function
+)
+
+# Load environment variables and initialize OpenAI
 load_dotenv()
 initialize_openai()
 
+# Initialize global context and messages
+context = {}
+messages = [
+    {
+        "role": "system",
+        "content": (
+            "Eres un asistente que puede analizar prompts y realizar acciones como generar, editar, escalar o describir imágenes."
+        )
+    }
+]
+history = []
+
 def display_history(history):
-    """Muestra un pequeño historial de la conversación."""
+    """Displays a brief conversation history."""
     print("\n--- Historial de conversación ---")
     for i, entry in enumerate(history, 1):
         print(f"{i}. {entry}")
     print("-------------------------------")
-    
 
-def main():
-    print("Prueba de concepto - generación y edición de imágenes con contexto.")
-    
-    # Mensajes iniciales del sistema
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "Eres un asistente que ayuda a los usuarios a generar o editar imágenes mediante una API. "
-                "Primero, decide si la consulta del usuario requiere una generación, una edición, o ninguna acción."
-            )
-        }
+def iterative_decision_loop(context, iterative=False):
+    function_calling_functions = [
+        generate_image_function,
+        edit_image_function,
+        describe_image_function,
+        remix_image_function,
+        upscale_image_function
     ]
-
-    # Historial de conversación
-    history = []
-
     while True:
-        user_input = input("\nDescribe lo que necesitas (generar o editar una imagen, o simplemente haz preguntas): ")
-        
-        if detect_provided_image(user_input):
-            print("La entrada contiene una URL de imagen. Continuando con la edición...")
-            continue  # Saltar al siguiente ciclo para manejar esta URL en otra entrada
+        if not iterative:
+            user_input = input("\nDescribe lo que necesitas: ")
+            if user_input.lower() in ['salir', 'exit', 'quit']:
+                print("Finalizando la interacción. ¡Hasta luego!")
+                break
 
-        
-        messages.append({"role": "user", "content": user_input})
-        history.append(f"Usuario: {user_input}")
+            # Add user message to messages and history
+            messages.append({"role": "user", "content": user_input})
+            history.append(f"Usuario: {user_input}")
+        else:
+            # If iterative, use the last user message
+            user_input = messages[-1]["content"]
 
-        # Primera decisión: determinar si se debe generar, editar o ninguna acción
+        # Print current messages
+        print("\nMensajes enviados al modelo:")
+        for msg in messages:
+            print(msg)
+
+        # Detect if the user provided an explicit URL
+        url_match = contains_url(user_input)
+        if url_match:
+            context["last_generated_image_url"] = url_match.group(0)
+            print(f"Se detectó que el usuario proporcionó una nueva URL: {context['last_generated_image_url']}")
+
+        # Call the decision function
+        print("\nLlamando a openai.ChatCompletion.create()...")
         decision_response = openai.ChatCompletion.create(
             model="gpt-4-0613",
             messages=messages,
-            functions=[decision_function],
+            functions=function_calling_functions,
             function_call="auto"
         )
+        print("\nRespuesta de OpenAI:")
+        print(decision_response)
 
         decision_message = decision_response["choices"][0]["message"]
 
         if "function_call" in decision_message:
             function_call = decision_message["function_call"]
-            decision_arguments = json.loads(function_call["arguments"])
-            action = decide_action(decision_arguments)
+            name = function_call["name"]
+            arguments_json = function_call["arguments"]
+            print(f"\nFunction call detectada: {name}")
+            print(f"Arguments JSON: {arguments_json}")
+            arguments = json.loads(arguments_json)
+            print(f"Arguments dict: {arguments}")
 
-            if action == "generate":
-                # Llamar a la función para generación de imágenes
-                response = openai.ChatCompletion.create(
-                    model="gpt-4-0613",
-                    messages=messages,
-                    functions=[generate_image_function],
-                    function_call="auto"
-                )
-                handle_generate_image(response, messages, history)
+            # Add the last image URL if needed
+            last_image_url = context.get("last_generated_image_url")
+            if last_image_url and "image_url" in function_calling_functions[
+                [func["name"] for func in function_calling_functions].index(name)
+            ]["parameters"]["properties"]:
+                if "image_url" not in arguments:
+                    arguments["image_url"] = last_image_url
+                    print(f"Agregando 'image_url' a los argumentos: {last_image_url}")
 
-            elif action == "edit":
-                # Llamar a la función para edición de imágenes
-                response = openai.ChatCompletion.create(
-                    model="gpt-4-0613",
-                    messages=messages,
-                    functions=[edit_image_function],
-                    function_call="auto"
-                )
-                handle_edit_image(response, messages, history)
+            # Interpret user's decision
+            if name == "adjust_parameters" and not iterative:
+                print(f"Se va a realizar {name} con los siguientes parámetros autogenerados:\n{arguments}")
+                new_input = input("\n¿Deseas agregar algo más?: ")
+                messages.append({"role": "user", "content": new_input})
+                history.append(f"Usuario: {new_input}")
+                # Recursive call with iterative=True
+                iterative_decision_loop(context, iterative=True)
+                break
+
+            elif name in ["generate_image", "edit_image", "describe_image", "remix_image", "upscale_image"]:
+                print(f"Se va a ejecutar la función {name}")
+                # Map function name to action
+                action_map = {
+                    "generate_image": "generate",
+                    "edit_image": "edit",
+                    "describe_image": "describe",
+                    "remix_image": "remix",
+                    "upscale_image": "upscale"
+                }
+                action = action_map.get(name)
+                handle_image_action(action, arguments, context, history)
+                # Add assistant's response to messages
+                assistant_message = {
+                    "role": "assistant",
+                    "content": f"Acción '{action}' completada exitosamente. URL de la imagen: {context.get('last_generated_image_url', 'No disponible')}"
+                }
+                messages.append(assistant_message)
+                history.append(f"Asistente: {assistant_message['content']}")
+                # Reset iterative
+                iterative = False
 
         else:
-            # Continuar con la conversación normal
+            # Handle normal interaction if no specific action
             assistant_response = decision_message["content"]
             print(f"Asistente: {assistant_response}")
             history.append(f"Asistente: {assistant_response}")
-            user_input = input("Respuesta: ")
-            messages.append({"role": "user", "content": user_input})
-            history.append(f"Usuario: {user_input}")
+            messages.append({"role": "assistant", "content": assistant_response})
+            iterative = False
 
-        # Mostrar historial actualizado
-        display_history(history)
-
-        print("\nPuedes seguir describiendo imágenes, editarlas o simplemente hacer preguntas.")
-
-# Función para manejar la generación de imágenes
-def handle_generate_image(response, messages, history):
-    message = response["choices"][0]["message"]
-    if "function_call" in message:
-        function_call = message["function_call"]
-        arguments = json.loads(function_call["arguments"])
-
-        if confirm_parameters(arguments):
-            try:
-                image_response = generate_image(arguments)
-                print("\n¡Imagen generada exitosamente!")
-                print(json.dumps(image_response, indent=2))
-                
-                response_message = "La imagen ha sido generada con éxito."
-                messages.append({"role": "assistant", "content": response_message})
-                history.append(f"Asistente: {response_message} - Parámetros: {arguments}")
-            except Exception as e:
-                error_message = f"Ocurrió un error al generar la imagen: {e}"
-                print(error_message)
-                messages.append({"role": "assistant", "content": error_message})
-                history.append(f"Asistente: {error_message}")
-
-# Función para manejar la edición de imágenes
-def handle_edit_image(response, messages, history):
-    message = response["choices"][0]["message"]
-    if "function_call" in message:
-        function_call = message["function_call"]
-        arguments = json.loads(function_call["arguments"])
-
-        if confirm_parameters(arguments):
-            try:
-                edit_response = edit_image(arguments)
-                print("\n¡Imagen editada exitosamente!")
-                print(json.dumps(edit_response, indent=2))
-                
-                response_message = "La imagen ha sido editada con éxito."
-                messages.append({"role": "assistant", "content": response_message})
-                history.append(f"Asistente: {response_message} - Parámetros: {arguments}")
-            except Exception as e:
-                error_message = f"Ocurrió un error al editar la imagen: {e}"
-                print(error_message)
-                messages.append({"role": "assistant", "content": error_message})
-                history.append(f"Asistente: {error_message}")
+def main():
+    """
+    Runs the main program loop.
+    """
+    context = {}
+    iterative_decision_loop(context)
 
 if __name__ == "__main__":
     main()

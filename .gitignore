@@ -1,19 +1,18 @@
-# Ignorar archivos de entorno
 .env
 .env.local
 .env.development
 .env.production
 .env.*
 
-# Ignorar directorios y archivos de Python
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 
-# Ignorar otros archivos temporales
 *.log
 *.tmp
 *.swp
 *.bak
 *.orig
+
+

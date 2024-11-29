@@ -1,39 +1,24 @@
-
-decision_function = {
-    "name": "decide_action",
-    "description": "Decide si el usuario quiere generar o editar una imagen, o si no es necesario realizar una acción auxiliar.",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "action": {
-                "type": "string",
-                "description": "La acción a realizar: 'generate', 'edit', o 'none'.",
-                "enum": ["generate", "edit", "none"]
-            }
-        },
-        "required": ["action"]
-    }
-}
-
+# Function Definitions for Function Calling with OpenAI
 
 generate_image_function = {
     "name": "generate_image",
-    "description": "Generar una imagen basada en los parámetros proporcionados.",
+    "description": "Genera una nueva imagen basándose en un prompt y opciones específicas.",
     "parameters": {
         "type": "object",
         "properties": {
             "prompt": {
                 "type": "string",
-                "description": "La descripción de la imagen a generar.",
+                "description": "El prompt que describe la imagen a generar."
             },
             "aspect_ratio": {
                 "type": "string",
-                "description": "La proporción de aspecto de la imagen. No puede usarse junto con resolución.",
+                "description": "Relación de aspecto para la generación de imágenes.",
                 "enum": [
-                    "ASPECT_10_16", "ASPECT_16_10", "ASPECT_9_16", 
-                    "ASPECT_16_9", "ASPECT_3_2", "ASPECT_2_3", 
-                    "ASPECT_4_3", "ASPECT_3_4", "ASPECT_1_1", 
-                    "ASPECT_1_3", "ASPECT_3_1"
+                    "ASPECT_1_1",
+                    "ASPECT_16_9",
+                    "ASPECT_9_16",
+                    "ASPECT_4_3",
+                    "ASPECT_3_4"
                 ]
             },
             "model": {
@@ -43,135 +28,187 @@ generate_image_function = {
             },
             "magic_prompt_option": {
                 "type": "string",
-                "description": "Determina si se debe usar MagicPrompt en la generación.",
+                "description": "Activa o desactiva MagicPrompt para mejorar el prompt.",
                 "enum": ["AUTO", "ON", "OFF"]
             },
             "seed": {
                 "type": "integer",
-                "description": "La semilla para la generación de la imagen. Valores permitidos entre 0 y 2147483647.",
-                "minimum": 0,
-                "maximum": 2147483647
+                "description": "Semilla para la generación reproducible."
             },
             "style_type": {
                 "type": "string",
-                "description": "El estilo de generación de la imagen. Solo aplicable a modelos V_2 y superiores.",
-                "enum": ["AUTO", "GENERAL", "REALISTIC", "DESIGN", "RENDER_3D", "ANIME"]
+                "description": "Estilo de la imagen generada.",
+                "enum": ["AUTO", "GENERAL", "REALISTIC", "ANIME", "DESIGN", "RENDER_3D"]
             },
             "negative_prompt": {
                 "type": "string",
-                "description": "Descripción de lo que se debe excluir de la imagen. Tiene menor prioridad que las descripciones del prompt principal."
+                "description": "Descripción de lo que se debe excluir de la imagen."
             },
             "resolution": {
                 "type": "string",
-                "description": "La resolución para generar la imagen. No puede usarse junto con aspecto de relación.",
-                "enum": [
-                    "RESOLUTION_512_1536", "RESOLUTION_576_1408", "RESOLUTION_576_1472",
-                    "RESOLUTION_576_1536", "RESOLUTION_640_1024", "RESOLUTION_640_1344",
-                    "RESOLUTION_640_1408", "RESOLUTION_640_1472", "RESOLUTION_640_1536",
-                    "RESOLUTION_704_1152", "RESOLUTION_704_1216", "RESOLUTION_704_1280",
-                    "RESOLUTION_704_1344", "RESOLUTION_704_1408", "RESOLUTION_704_1472",
-                    "RESOLUTION_720_1280", "RESOLUTION_736_1312", "RESOLUTION_768_1024",
-                    "RESOLUTION_768_1088", "RESOLUTION_768_1152", "RESOLUTION_768_1216",
-                    "RESOLUTION_768_1232", "RESOLUTION_768_1280", "RESOLUTION_768_1344",
-                    "RESOLUTION_832_960", "RESOLUTION_832_1024", "RESOLUTION_832_1088",
-                    "RESOLUTION_832_1152", "RESOLUTION_832_1216", "RESOLUTION_832_1248",
-                    "RESOLUTION_864_1152", "RESOLUTION_896_960", "RESOLUTION_896_1024",
-                    "RESOLUTION_896_1088", "RESOLUTION_896_1120", "RESOLUTION_896_1152",
-                    "RESOLUTION_960_832", "RESOLUTION_960_896", "RESOLUTION_960_1024",
-                    "RESOLUTION_960_1088", "RESOLUTION_1024_640", "RESOLUTION_1024_768",
-                    "RESOLUTION_1024_832", "RESOLUTION_1024_896", "RESOLUTION_1024_960",
-                    "RESOLUTION_1024_1024", "RESOLUTION_1088_768", "RESOLUTION_1088_832",
-                    "RESOLUTION_1088_896", "RESOLUTION_1088_960", "RESOLUTION_1120_896",
-                    "RESOLUTION_1152_704", "RESOLUTION_1152_768", "RESOLUTION_1152_832",
-                    "RESOLUTION_1152_864", "RESOLUTION_1152_896", "RESOLUTION_1216_704",
-                    "RESOLUTION_1216_768", "RESOLUTION_1216_832", "RESOLUTION_1232_768",
-                    "RESOLUTION_1248_832", "RESOLUTION_1280_704", "RESOLUTION_1280_720",
-                    "RESOLUTION_1280_768", "RESOLUTION_1280_800", "RESOLUTION_1312_736",
-                    "RESOLUTION_1344_640", "RESOLUTION_1344_704", "RESOLUTION_1344_768",
-                    "RESOLUTION_1408_576", "RESOLUTION_1408_640", "RESOLUTION_1408_704",
-                    "RESOLUTION_1472_576", "RESOLUTION_1472_640", "RESOLUTION_1472_704",
-                    "RESOLUTION_1536_512", "RESOLUTION_1536_576", "RESOLUTION_1536_640"
-                ]
+                "description": "Resolución específica de la imagen generada."
             },
             "color_palette": {
                 "type": "object",
-                "description": "Una paleta de colores para la generación, ya sea mediante un preset o hexadecimales explícitos.",
+                "description": "Paleta de colores utilizada para la generación.",
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": "Un preset de paleta de colores.",
                         "enum": ["EMBER", "FRESH", "JUNGLE", "MAGIC", "MELON", "MOSAIC", "PASTEL", "ULTRAMARINE"]
                     },
                     "members": {
                         "type": "array",
-                        "description": "Lista de colores hexadecimales para definir la paleta.",
                         "items": {
                             "type": "object",
                             "properties": {
                                 "color_hex": {
                                     "type": "string",
-                                    "description": "Código hexadecimal del color.",
-                                    "pattern": "^#(?:[0-9a-fA-F]{3}){1,2}$"
+                                    "description": "Color en formato hexadecimal."
                                 },
                                 "color_weight": {
                                     "type": "number",
-                                    "description": "Peso del color en la paleta, entre 0.05 y 1.0.",
                                     "minimum": 0.05,
-                                    "maximum": 1.0
+                                    "maximum": 1.0,
+                                    "description": "Peso del color en la paleta."
                                 }
                             },
                             "required": ["color_hex"]
                         }
                     }
-                },
-                "anyOf": [
-                    {"required": ["name"]},
-                    {"required": ["members"]}
-                ]
+                }
             }
         },
         "required": ["prompt"]
-    },
+    }
 }
 
-
-# Aqui se esta usando la url en lugar del archivo
 edit_image_function = {
     "name": "edit_image",
-    "description": "Edita una imagen utilizando una URL de imagen, una máscara generada automáticamente y otros parámetros opcionales.",
+    "description": "Edita una imagen existente utilizando un prompt y una máscara.",
     "parameters": {
         "type": "object",
         "properties": {
             "prompt": {
                 "type": "string",
-                "description": "Descripción del resultado esperado después de la edición."
+                "description": "Descripción de los cambios en la imagen."
             },
-            "model": {
+            "image_url": {
                 "type": "string",
-                "description": "El modelo utilizado para editar la imagen, si se pide algo especifico usar V_2_TURBO.",
-                "enum": ["V_2", "V_2_TURBO"] #Unicamente funciona para v_2 o v_2 turbo la edicion de imagenes
+                "description": "URL de la imagen que se va a editar."
             },
             "magic_prompt_option": {
                 "type": "string",
-                "description": "Determina si MagicPrompt debe ser utilizado durante la edición para obtener un mejor resultado.",
+                "description": "Activa o desactiva MagicPrompt para mejorar el prompt.",
+                "enum": ["AUTO", "ON", "OFF"]
+            },
+            "model": {
+                "type": "string",
+                "description": "Modelo utilizado para la edición.",
+                "enum": ["V_2", "V_2_TURBO"]
+            },
+            "style_type": {
+                "type": "string",
+                "description": "Estilo de la edición aplicada.",
+                "enum": ["REALISTIC", "ANIME", "DESIGN", "RENDER_3D"]
+            },
+        },
+        "required": ["prompt", "image_url"]
+    }
+}
+
+describe_image_function = {
+    "name": "describe_image",
+    "description": "Genera una descripción para una imagen proporcionada.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "image_url": {
+                "type": "string",
+                "description": "URL de la imagen a describir."
+            }
+        },
+        "required": ["image_url"]
+    }
+}
+
+remix_image_function = {
+    "name": "remix_image",
+    "description": "Realiza un remix de una imagen basada en un prompt y parámetros opcionales.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "prompt": {
+                "type": "string",
+                "description": "Descripción del remix deseado."
+            },
+            "image_url": {
+                "type": "string",
+                "description": "URL de la imagen que se va a remixar."
+            },
+            "aspect_ratio": {
+                "type": "string",
+                "description": "Relación de aspecto para la imagen remixada.",
+                "enum": [
+                    "ASPECT_1_1",
+                    "ASPECT_16_9",
+                    "ASPECT_9_16",
+                    "ASPECT_4_3",
+                    "ASPECT_3_4"
+                ]
+            },
+            "image_weight": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "description": "Peso de la imagen base en la generación."
+            },
+            "magic_prompt_option": {
+                "type": "string",
+                "description": "Activa o desactiva MagicPrompt.",
+                "enum": ["AUTO", "ON", "OFF"]
+            },
+            "model": {
+                "type": "string",
+                "description": "Modelo utilizado para la generación del remix.",
+                "enum": ["V_2", "V_2_TURBO"]
+            }
+        },
+        "required": ["prompt", "image_url"]
+    }
+}
+
+upscale_image_function = {
+    "name": "upscale_image",
+    "description": "Aumenta la resolución de una imagen proporcionada.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "image_url": {
+                "type": "string",
+                "description": "URL de la imagen que se va a escalar."
+            },
+            "resemblance": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "description": "Nivel de semejanza con la imagen original (1-100)."
+            },
+            "detail": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "description": "Nivel de detalle en la imagen escalada (1-100)."
+            },
+            "magic_prompt_option": {
+                "type": "string",
+                "description": "Activa o desactiva MagicPrompt.",
                 "enum": ["AUTO", "ON", "OFF"]
             },
             "seed": {
                 "type": "integer",
-                "description": "Semilla para la generación de la imagen editada.",
-                "minimum": 0,
-                "maximum": 2147483647
-            },
-            "style_type": {
-                "type": "string",
-                "description": "Estilo visual para la edición teniendo en cuenta el contexto anterior.",
-                "enum": ["AUTO", "GENERAL", "REALISTIC", "DESIGN", "RENDER_3D", "ANIME"]
-            },
-            "image_url": {
-                "type": "string",
-                "description": "URL de la imagen original (JPEG, PNG o WEBP)."
+                "description": "Semilla para la generación reproducible."
             }
         },
-        "required": ["prompt", "model", "image_url"]
-    },
+        "required": ["image_url"]
+    }
 }
