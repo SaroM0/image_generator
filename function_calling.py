@@ -1,32 +1,8 @@
 # Function Definitions for Function Calling with OpenAI
 
-confirm_parameters_function = {
-    "name": "adjust_or_proceed",
-    "description": (
-        "Determina si se debe proceder con la acción actual utilizando los parámetros existentes o si "
-        "los parámetros requieren ajustes adicionales. Utiliza el contexto proporcionado y el mensaje "
-        "del usuario para tomar esta decisión."
-    ),
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "decision": {
-                "type": "string",
-                "description": (
-                    "La decisión a tomar basada en los parámetros actuales: "
-                    "'continue_with_image_action' para proceder con la acción actual, o "
-                    "'adjust_parameters' si se necesita más información o ajustes de los parámetros."
-                ),
-                "enum": ["continue_with_image_action", "adjust_parameters"]
-            }
-        },
-        "required": ["decision"]
-    }
-}
-
 generate_image_function = {
     "name": "generate_image",
-    "description": "Genera una nueva imagen basándose en un prompt y opciones específicas.",
+    "description": "Genera una nueva imagen basándose en un prompt y parametros específicas. Unicamente se puede usar si se contienen los suficientes parametros especificos como el modelo a utilizar",
     "parameters": {
         "type": "object",
         "properties": {
@@ -227,7 +203,7 @@ describe_image_function = {
 
 remix_image_function = {
     "name": "remix_image",
-    "description": "Realiza un remix de una imagen basada en un prompt y parámetros opcionales.",
+    "description": "Realiza un remix de una imagen basada en un prompt y parámetros especificos.",
     "parameters": {
         "type": "object",
         "properties": {
@@ -354,7 +330,7 @@ remix_image_function = {
 
 upscale_image_function = {
     "name": "upscale_image",
-    "description": "Aumenta la resolución de una imagen proporcionada con parámetros opcionales.",
+    "description": "Aumenta la resolución de una imagen proporcionada con parámetros especificos.",
     "parameters": {
         "type": "object",
         "properties": {
@@ -394,5 +370,26 @@ upscale_image_function = {
             }
         },
         "required": ["image_url"]
+    }
+}
+
+confirm_parameters_function = {
+    "name": "adjust_or_proceed",
+    "description": "Vas a usarla si NO se tienen todos los parámetros necesarios para llevar a cabo alguna de estas funciones: generate_image,generate_image, remix_image, upscale_image",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "function": {
+                "type": "string",
+                "description": "Nombre de la función solicitada para confirmar parámetros.",
+                "enum": ["generate_image", "generate_image", "remix_image", "upscale_image"]
+            },
+            "function_parameters": {
+                "type": "object",
+                "description": "Parámetros generados para la función solicitada a confirmar.",
+                "additionalProperties": True
+            }
+        },
+        "required": ["function", "function_parameters"]
     }
 }

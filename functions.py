@@ -20,7 +20,7 @@ def handle_image_action(action, arguments, context, history):
     arguments = clean_arguments(arguments, action, context)
     print(f"Argumentos después de limpiar: {arguments}")
 
-    if action == "generate":
+    if action == "generate_image":
         print("\nGenerando imagen con los siguientes parámetros:")
         print(arguments)
         result = generate_image(arguments, context)
@@ -28,15 +28,15 @@ def handle_image_action(action, arguments, context, history):
         print("\nEditando imagen con los siguientes parámetros:")
         print(arguments)
         result = edit_image(arguments, context)
-    elif action == "upscale":
+    elif action == "upscale_image":
         print("\nEscalando imagen con los siguientes parámetros:")
         print(arguments)
         result = upscale_image(arguments, context)
-    elif action == "describe":
+    elif action == "describe_image":
         print("\nDescribiendo imagen con los siguientes parámetros:")
         print(arguments)
         result = describe_image(arguments, context)
-    elif action == "remix":
+    elif action == "remix_image":
         print("\nRemixando imagen con los siguientes parámetros:")
         print(arguments)
         result = remix_image(arguments, context)

@@ -13,7 +13,6 @@ from functions import contains_url, handle_image_action
 from function_calling import (
     confirm_parameters_function,
     generate_image_function,
-    edit_image_function,
     describe_image_function,
     remix_image_function,
     upscale_image_function
@@ -42,41 +41,28 @@ def display_history(history):
         print(f"{i}. {entry}")
     print("-------------------------------")
 
-def iterative_decision_loop(context, iterative=False):
+def iterative_decision_loop():
+    # Definir las funciones que estarán disponibles para el modelo
     function_calling_functions = [
         confirm_parameters_function,
         generate_image_function,
-        edit_image_function,
         describe_image_function,
         remix_image_function,
         upscale_image_function
     ]
+
     while True:
-        if not iterative:
-            user_input = input("\nDescribe lo que necesitas: ")
-            if user_input.lower() in ['salir', 'exit', 'quit']:
-                print("Finalizando la interacción. ¡Hasta luego!")
-                break
+        # Solicitar input del usuario
+        user_input = input("\nDescribe lo que necesitas: ")
+        if user_input.lower() in ['salir', 'exit', 'quit']:
+            print("Finalizando la interacción. ¡Hasta luego!")
+            break
 
-            # Add user message to messages and history
-            messages.append({"role": "user", "content": user_input})
-            history.append(f"Usuario: {user_input}")
-        else:
-            # If iterative, use the last user message
-            user_input = messages[-1]["content"]
+        # Agregar el mensaje del usuario al historial
+        messages.append({"role": "user", "content": user_input})
+        history.append(f"Usuario: {user_input}")
 
-        # Print current messages
-        print("\nMensajes enviados al modelo:")
-        for msg in messages:
-            print(msg)
-
-        # Detect if the user provided an explicit URL
-        url_match = contains_url(user_input)
-        if url_match:
-            context["last_generated_image_url"] = url_match.group(0)
-            print(f"Se detectó que el usuario proporcionó una nueva URL: {context['last_generated_image_url']}")
-
-        # Call the decision function
+        # Llamar al function calling para tomar una decisión
         print("\nLlamando a openai.ChatCompletion.create()...")
         decision_response = openai.ChatCompletion.create(
             model="gpt-4-0613",
@@ -85,74 +71,56 @@ def iterative_decision_loop(context, iterative=False):
             function_call="auto"
         )
         print("\nRespuesta de OpenAI:")
-        print(decision_response)
+        print(json.dumps(decision_response, indent=4))
 
         decision_message = decision_response["choices"][0]["message"]
 
         if "function_call" in decision_message:
+            # Detectar la función sugerida
             function_call = decision_message["function_call"]
             name = function_call["name"]
             arguments_json = function_call["arguments"]
-            print(f"\nFunction call detectada: {name}")
-            print(f"Arguments JSON: {arguments_json}")
             arguments = json.loads(arguments_json)
-            print(f"Arguments dict: {arguments}")
 
-            # Add the last image URL if needed
-            last_image_url = context.get("last_generated_image_url")
-            if last_image_url and "image_url" in function_calling_functions[
-                [func["name"] for func in function_calling_functions].index(name)
-            ]["parameters"]["properties"]:
-                if "image_url" not in arguments:
-                    arguments["image_url"] = last_image_url
-                    print(f"Agregando 'image_url' a los argumentos: {last_image_url}")
-
-            # Interpret user's decision
-            if name == "adjust_parameters" and not iterative:
-                print(f"Se va a realizar {name} con los siguientes parámetros autogenerados:\n{arguments}")
-                new_input = input("\n¿Deseas agregar algo más?: ")
+            # Si se sugiere ajustar o confirmar parámetros
+            if name == "adjust_or_proceed":
+                function = arguments.get("function")
+                print(f"\nSe va a {function} con los siguientes parametros: {arguments}")
+                messages.append({"role": "user", "content": arguments})
+                history.append(f"Confirmación: {arguments}")
+                new_input = input("\nDeseas agregar algo mas?: ")
                 messages.append({"role": "user", "content": new_input})
                 history.append(f"Usuario: {new_input}")
-                # Recursive call with iterative=True
-                iterative_decision_loop(context, iterative=True)
+                iterative_decision_loop()
                 break
 
-            elif name in ["generate_image", "edit_image", "describe_image", "remix_image", "upscale_image"]:
-                print(f"Se va a ejecutar la función {name}")
-                # Map function name to action
-                action_map = {
-                    "generate_image": "generate",
-                    "edit_image": "edit",
-                    "describe_image": "describe",
-                    "remix_image": "remix",
-                    "upscale_image": "upscale"
-                }
-                action = action_map.get(name)
-                handle_image_action(action, arguments, context, history)
-                # Add assistant's response to messages
+
+            # Si el modelo sugiere directamente una función principal
+            elif name in ["generate_image", "describe_image", "remix_image", "upscale_image"]:
+                print(f"\nEjecutando función: {name}")
+                handle_image_action(name, arguments, context, history)
+
+                # Agregar la respuesta del asistente al historial
                 assistant_message = {
                     "role": "assistant",
-                    "content": f"Acción '{action}' completada exitosamente. URL de la imagen: {context.get('last_generated_image_url', 'No disponible')}"
+                    "content": f"Acción '{name}' completada exitosamente. URL de la imagen: {context.get('last_generated_image_url', 'No disponible')}"
                 }
                 messages.append(assistant_message)
                 history.append(f"Asistente: {assistant_message['content']}")
-                # Reset iterative
-                iterative = False
 
         else:
-            # Handle normal interaction if no specific action
+            # Respuesta sin función, respuesta normal del asistente
             assistant_response = decision_message["content"]
             print(f"Asistente: {assistant_response}")
             history.append(f"Asistente: {assistant_response}")
             messages.append({"role": "assistant", "content": assistant_response})
-            iterative = False
+
 
 def main():
     """
     Runs the main program loop.
     """
-    context = {}
-    iterative_decision_loop(context)
+    iterative_decision_loop()
 
 if __name__ == "__main__":
     main()
