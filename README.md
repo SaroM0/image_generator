@@ -1,173 +1,177 @@
 # Image Generator and Editor
 
-## Descripción
+## Description
 
-Este proyecto es una aplicación interactiva diseñada para generar y editar imágenes utilizando APIs como Ideogram y OpenAI. Su funcionamiento está basado en el contexto proporcionado por el usuario, permitiendo tomar decisiones dinámicas sobre la generación y edición de imágenes. Además, recuerda las imágenes generadas previamente o las proporcionadas por el usuario para un flujo continuo e intuitivo.
-
----
-
-## Funcionalidades
-
-1. **Generación de Imágenes**:
-
-   - Permite a los usuarios crear imágenes a partir de descripciones (_prompts_).
-   - Utiliza parámetros opcionales como estilo, modelo, relación de aspecto, entre otros, para personalizar los resultados.
-   - La imagen generada se guarda en el contexto para futuras acciones.
-
-2. **Edición de Imágenes**:
-
-   - El usuario puede editar imágenes generadas previamente o proporcionadas a través de una URL.
-   - Se genera automáticamente una máscara blanca que cubre toda la imagen, lo que permite modificaciones completas.
-   - Permite aplicar estilos y ajustes personalizados según las necesidades del usuario.
-
-3. **Gestión de Contexto**:
-
-   - La aplicación almacena:
-     - **Última imagen generada:** Imagen creada por la aplicación.
-     - **Última imagen proporcionada:** Imagen enviada manualmente por el usuario.
-   - Este contexto permite editar imágenes de manera dinámica, ya sea la última generada o la última proporcionada.
-
-4. **Historial Interactivo**:
-   - Se muestra un registro de las acciones realizadas, permitiendo al usuario revisar el flujo de la conversación.
+This project is a proof of concept aimed at analyzing the functionality and integration of OpenAI's function calling with APIs to automate various operations, connections, and implementations through natural language. It is an interactive application designed to generate and edit images using APIs like Ideogram and OpenAI. It operates based on the context provided by the user, enabling dynamic decision-making for image generation and editing. Additionally, it remembers previously generated or user-provided images, ensuring a seamless and intuitive workflow.
 
 ---
 
-## Flujo de Decisiones
+## Features
 
-![Descripción del diagrama](assets/diagrama.jpeg)
+1. **Image Generation**:
 
-### 1. Entrada del Usuario
+   - Allows users to create images from text descriptions (_prompts_).
+   - Supports optional parameters like style, model, aspect ratio, and more for customization.
+   - The generated image is stored in the context for future actions.
 
-- El usuario describe lo que desea realizar: generar, editar o hacer preguntas.
-- Si el texto incluye una URL válida, esta se detecta y almacena en el contexto como la última imagen proporcionada.
+2. **Image Editing**:
 
-### 2. Análisis de la Solicitud
+   - Users can edit previously generated images or those provided via a URL.
+   - A white mask that covers the entire image is automatically generated for complete modifications.
+   - Enables users to apply styles and adjustments based on their needs.
 
-- La aplicación utiliza un modelo para decidir si el usuario desea:
-  - **Generar una nueva imagen.**
-  - **Editar una imagen existente.**
-  - **No realizar ninguna acción.**
+3. **Context Management**:
 
-### 3. Generación de Imagen
+   - The application stores:
+     - **Last generated image:** An image created by the application.
+     - **Last provided image:** An image manually provided by the user.
+   - This context allows dynamic image editing, whether for the last generated or provided image.
 
-- Si se decide generar una imagen:
-  - Se construye una solicitud con los parámetros proporcionados por el usuario.
-  - La imagen generada se guarda en el contexto como la última imagen generada.
-  - Se muestra al usuario la URL de la imagen creada.
+4. **Interactive History**:
 
-### 4. Edición de Imagen
-
-- Si se decide editar una imagen:
-  - Se selecciona automáticamente una imagen del contexto:
-    - Si el usuario proporcionó una URL, esta tiene prioridad.
-    - Si no, se utiliza la última imagen generada por la aplicación.
-  - Se genera una máscara blanca para cubrir toda la imagen.
-  - Se envía la solicitud de edición a la API con los parámetros definidos.
-  - La nueva imagen editada se guarda en el contexto como la última imagen generada.
-
-### 5. Confirmación de Parámetros
-
-- Antes de realizar cualquier acción, se presentan los parámetros al usuario.
-- El usuario puede confirmar los parámetros o editarlos antes de proceder.
+   - Keeps a record of actions performed, allowing users to review the conversation flow.
 
 ---
 
-## Estructura del Flujo
+## Decision Flow
 
-1. **Inicio**:
+![Diagram Description](assets/diagrama.jpeg)
 
-   - El usuario proporciona su solicitud inicial.
-   - Si incluye una URL, esta se guarda automáticamente en el contexto.
+### 1. User Input
 
-2. **Decisión**:
+- The user describes their desired action: generate, edit, or ask questions.
+- If the input includes a valid URL, it is detected and stored in the context as the last provided image.
 
-   - Se analiza la solicitud para determinar si es una acción de generación, edición o una consulta general.
+### 2. Request Analysis
 
-3. **Ejecución de Acción**:
+- The application uses a model to decide whether the user intends to:
+  - **Generate a new image.**
+  - **Edit an existing image.**
+  - **Take no action.**
 
-   - **Generar**:
-     - Se crea una nueva imagen basada en el _prompt_ y los parámetros opcionales.
-   - **Editar**:
-     - Se utiliza una imagen del contexto (proporcionada o generada previamente).
-     - Se genera una máscara y se envía la solicitud de edición.
-   - **Ninguna Acción**:
-     - Se continúa con la conversación sin realizar ninguna operación.
+### 3. Image Generation
 
-4. **Historial y Contexto**:
-   - Se registra cada acción en un historial interactivo.
-   - Las imágenes generadas o editadas se guardan en el contexto para futuras referencias.
+- If image generation is chosen:
+  - A request is constructed with the parameters provided by the user.
+  - The generated image is saved in the context as the last generated image.
+  - The URL of the created image is displayed to the user.
 
----
+### 4. Image Editing
 
-## Características Clave
+- If image editing is chosen:
+  - An image is automatically selected from the context:
+    - If the user provided a URL, it takes priority.
+    - Otherwise, the last image generated by the application is used.
+  - A white mask is generated to cover the entire image.
+  - The editing request is sent to the API with the defined parameters.
+  - The newly edited image is saved in the context as the last generated image.
 
-1. **Detección de URL de Imágenes**:
+### 5. Parameter Confirmation
 
-   - Analiza la entrada del usuario para identificar si incluye una URL válida.
-   - Las URLs detectadas se almacenan como la última imagen proporcionada.
-
-2. **Máscara Automática**:
-
-   - Genera una máscara completamente blanca que cubre toda la imagen original.
-   - Permite realizar ediciones completas sin necesidad de intervención manual.
-
-3. **Persistencia de Contexto**:
-
-   - Recuerda las imágenes utilizadas previamente, permitiendo flujos continuos y acciones dependientes del historial.
-
-4. **Confirmación de Parámetros**:
-
-   - El usuario puede revisar y ajustar los parámetros antes de ejecutar cualquier acción.
-
-5. **Gestión Automática de Archivos Temporales**:
-   - Las imágenes descargadas y las máscaras generadas se eliminan automáticamente después de cada operación.
+- Before performing any action, the parameters are presented to the user.
+- The user can confirm or adjust the parameters before proceeding.
 
 ---
 
-## Ejemplo de Uso
+## Flow Structure
 
-### Generación de Imagen
+1. **Start**:
 
-**Usuario:**  
-"Quiero un gato sobre una mesa de billar."
+   - The user provides an initial request.
+   - If a URL is included, it is automatically saved in the context.
 
-**Sistema:**  
-"Se determinó que se debe generar una imagen.  
-Prompt: un gato sobre una mesa de billar.  
-¿Deseas proceder a generar la imagen con estos parámetros? (s/n)"
+2. **Decision**:
 
-**Resultado:**  
-Se genera la imagen y se guarda en el contexto.
+   - The request is analyzed to determine if it is a generation, editing, or general inquiry action.
 
----
+3. **Action Execution**:
 
-### Edición de Imagen
+   - **Generate**:
+     - A new image is created based on the prompt and optional parameters.
+   - **Edit**:
+     - An image from the context (provided or previously generated) is used.
+     - A mask is generated, and the editing request is sent.
+   - **No Action**:
+     - The conversation continues without performing any operation.
 
-**Usuario:**  
-"Quiero que el gato sea naranja."
+4. **History and Context**:
 
-**Sistema:**  
-"Se determinó que se debe editar una imagen.  
-Prompt: Cambiar el color del gato a naranja.  
-Imagen utilizada: URL de la última imagen generada.  
-¿Deseas proceder a editar la imagen con estos parámetros? (s/n)"
-
-**Resultado:**  
-La imagen es editada y la nueva versión se guarda en el contexto.
+   - Every action is logged in an interactive history.
+   - Generated or edited images are saved in the context for future reference.
 
 ---
 
-## Requisitos del Proyecto
+## Key Features
 
-1. **Dependencias**:
+1. **Image URL Detection**:
 
-   - Instale las dependencias utilizando el siguiente comando:
+   - Analyzes user input to identify valid URLs.
+   - Detected URLs are stored as the last provided image.
+
+2. **Automatic Mask**:
+
+   - Generates a fully white mask that covers the original image.
+   - Allows complete edits without manual intervention.
+
+3. **Context Persistence**:
+
+   - Remembers previously used images, enabling continuous workflows and history-dependent actions.
+
+4. **Parameter Confirmation**:
+
+   - Users can review and adjust parameters before executing any action.
+
+5. **Automatic Temporary File Management**:
+
+   - Downloaded images and generated masks are automatically deleted after each operation.
+
+---
+
+## Usage Example
+
+### Image Generation
+
+**User:**  
+"I want a cat on a pool table."
+
+**System:**  
+"Image generation detected.  
+Prompt: A cat on a pool table.  
+Do you want to proceed with these parameters? (y/n)"
+
+**Result:**  
+The image is generated and saved in the context.
+
+---
+
+### Image Editing
+
+**User:**  
+"I want the cat to be orange."
+
+**System:**  
+"Image editing detected.  
+Prompt: Change the color of the cat to orange.  
+Image used: URL of the last generated image.  
+Do you want to proceed with these parameters? (y/n)"
+
+**Result:**  
+The image is edited, and the new version is saved in the context.
+
+---
+
+## Project Requirements
+
+1. **Dependencies**:
+
+   - Install the dependencies using the following command:
      ```bash
      pip install -r requirements.txt
      ```
 
-2. **Variables de Entorno**:
-   - Cree un archivo `.env` con las siguientes variables:
+2. **Environment Variables**:
+
+   - Create a `.env` file with the following variables:
      ```plaintext
      IDEOGRAM_API_KEY=<your_ideogram_api_key>
      OPENAI_API_KEY=<your_openai_api_key>
