@@ -35,7 +35,6 @@ This project is a proof of concept aimed at analyzing the functionality and inte
 
 ## Decision Flow
 
-![Diagram Description](assets/diagrama.jpeg)
 
 ### 1. User Input
 
